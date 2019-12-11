@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=teamcity
+      - POSTGRES_USER=teamcity
+      - POSTGRES_PASSWORD=teamcity
+    ports:
+      - "5432:5432"
+    networks:
+      - teamcity_network
+  teamcity:
+    image: jetbrains/teamcity-server
+    ports:
+      - "8080:8111"
+    restart:
+      on-failure
+    volumes:
+      - ./teamcity-server/data:/data/teamcity_server/datadir
+      - ./teamcity-server/logs:/opt/teamcity/logs
+    networks:
+      - teamcity_network
+  teamcity-agent:
+    image: jetbrains/teamcity-agent
+    environment:
+      - SERVER_URL=http://teamcity:8111
+      - AGENT_NAME=regular_agent
+    networks:
+      - teamcity_network
+  teamcity-minimal-agent:
+    image: jetbrains/teamcity-minimal-agent
+    environment:
+      - SERVER_URL=http://teamcity:8111
+      - AGENT_NAME=minimal_agent
+    networks:
+      - teamcity_network
+
+networks:
+  teamcity_network:
+
+volumes:
+  postgres-data:
+    driver: local
